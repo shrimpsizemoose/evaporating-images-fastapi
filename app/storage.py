@@ -13,11 +13,12 @@ class CoordinateStorage:
         self.pixels_per_trigger = int(os.getenv("PIXELS_PER_TRIGGER", "70"))
         self.draw_probability = float(os.getenv("DRAW_PROBABILITY", "0.5"))
 
-    def add_pixels(self, coords: list[dict], evaporate: bool = False, min_ttl: int | None = None, max_ttl: int | None = None) -> list[dict]:
+    def add_pixels(self, coords: list[dict], evaporate: bool = False, min_ttl: int | None = None, max_ttl: int | None = None, limit: int | None = None) -> list[dict]:
         pixels = coords.copy()
         random.shuffle(pixels)
 
-        limit = len(pixels) if not evaporate else self.pixels_per_trigger
+        if limit is None:
+            limit = len(pixels) if not evaporate else self.pixels_per_trigger
 
         min_ttl = min_ttl if min_ttl is not None else self.min_ttl
         max_ttl = max_ttl if max_ttl is not None else self.max_ttl
