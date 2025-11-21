@@ -13,15 +13,11 @@ class CoordinateStorage:
         self.pixels_per_trigger = int(os.getenv("PIXELS_PER_TRIGGER", "70"))
         self.draw_probability = float(os.getenv("DRAW_PROBABILITY", "0.5"))
 
-    def add_pixels(self, coords: list[dict], evaporate: bool = False, min_ttl: int | None = None, max_ttl: int | None = None, limit: int | None = None) -> list[dict]:
+    def add_pixels(self, coords: list[dict], evaporate: bool = False) -> list[dict]:
         pixels = coords.copy()
         random.shuffle(pixels)
 
-        if limit is None:
-            limit = len(pixels) if not evaporate else self.pixels_per_trigger
-
-        min_ttl = min_ttl if min_ttl is not None else self.min_ttl
-        max_ttl = max_ttl if max_ttl is not None else self.max_ttl
+        limit = len(pixels) if not evaporate else self.pixels_per_trigger
 
         added = []
         for coord in pixels[:limit]:
@@ -36,10 +32,29 @@ class CoordinateStorage:
 
             self.redis.hset(key, mapping=value)
             if evaporate:
-                ttl = random.randint(min_ttl, max_ttl)
+                ttl = random.randint(self.min_ttl, self.max_ttl)
                 self.redis.expire(key, ttl)
 
             added.append({**value, "draw": bool(draw)})
+
+        return added
+
+    def add_all_pixels(self, coords: list[dict]) -> list[dict]:
+        added = []
+        for coord in coords:
+            x, y, color = coord["x"], coord["y"], coord["color"]
+            key = f"coords:{y}:{x}"
+
+            if self.redis.exists(key):
+                continue
+
+            value = {"x": x, "y": y, "color": color, "draw": True}
+
+            self.redis.hset(key, mapping=value)
+            ttl = random.randint(5, 15)
+            self.redis.expire(key, ttl)
+
+            added.append(value)
 
         return added
 

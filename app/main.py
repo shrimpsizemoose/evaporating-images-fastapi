@@ -94,7 +94,7 @@ async def full():
     shift_y = int(os.getenv("FIGURE_SHIFT_Y", "5"))
     coords = figure.get_coords(shift_x=shift_x, shift_y=shift_y)
 
-    added = storage.add_pixels(coords, evaporate=True, min_ttl=5, max_ttl=15, limit=len(coords))
+    added = storage.add_all_pixels(coords)
 
     await manager.broadcast({"type": "pixels_added", "coords": added})
 
