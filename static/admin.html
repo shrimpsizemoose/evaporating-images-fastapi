@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="/static/favico.png" />
+<title>Admin Panel</title>
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background: #1a1a1a;
+    color: #fff;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.header {
+    background: #2a2a2a;
+    padding: 20px;
+    text-align: center;
+    border-bottom: 2px solid #3a3a3a;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 500;
+}
+
+.container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.button {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 24px;
+    font-size: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    touch-action: manipulation;
+}
+
+.button:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.button.trigger {
+    background: #4CAF50;
+}
+
+.button.full {
+    background: #2196F3;
+}
+
+.button.clear {
+    background: #f44336;
+}
+
+.status {
+    background: #2a2a2a;
+    padding: 16px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 14px;
+    color: #aaa;
+}
+
+.status.success {
+    background: #1b5e20;
+    color: #a5d6a7;
+}
+
+.status.error {
+    background: #b71c1c;
+    color: #ef9a9a;
+}
+
+@media (min-width: 768px) {
+    .button {
+        font-size: 18px;
+        padding: 20px;
+    }
+}
+</style>
+</head>
+<body>
+<div class="header">
+    <h1>Evaporating Images Admin</h1>
+</div>
+<div class="container">
+    <button class="button trigger" onclick="trigger()">
+        ✨ Trigger
+    </button>
+    <button class="button full" onclick="full()">
+        🖼️ Show Full
+    </button>
+    <button class="button clear" onclick="clear()">
+        🗑️ Clear
+    </button>
+    <div id="status" class="status">Ready</div>
+</div>
+
+<script>
+const statusEl = document.getElementById('status');
+
+function showStatus(message, type = 'success') {
+    statusEl.textContent = message;
+    statusEl.className = `status ${type}`;
+    setTimeout(() => {
+        statusEl.textContent = 'Ready';
+        statusEl.className = 'status';
+    }, 3000);
+}
+
+async function trigger() {
+    try {
+        const response = await fetch('/api/trigger', { method: 'POST' });
+        const data = await response.json();
+        showStatus(`Added ${data.count} pixels`, 'success');
+    } catch (err) {
+        showStatus('Error: ' + err.message, 'error');
+    }
+}
+
+async function full() {
+    try {
+        const response = await fetch('/api/full', { method: 'POST' });
+        const data = await response.json();
+        showStatus(`Loaded full image (${data.count} pixels)`, 'success');
+    } catch (err) {
+        showStatus('Error: ' + err.message, 'error');
+    }
+}
+
+async function clear() {
+    if (!confirm('Clear the entire grid?')) return;
+    try {
+        const response = await fetch('/api/clear', { method: 'POST' });
+        const data = await response.json();
+        showStatus('Grid cleared', 'success');
+    } catch (err) {
+        showStatus('Error: ' + err.message, 'error');
+    }
+}
+</script>
+</body>
+</html>

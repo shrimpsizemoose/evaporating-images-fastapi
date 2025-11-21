@@ -1,0 +1,3 @@
+art-poehali-2025.moose.rodeo {
+    reverse_proxy localhost:8080
+}
