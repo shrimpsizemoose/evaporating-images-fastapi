@@ -59,6 +59,12 @@ async def serve_admin():
         return HTMLResponse(content=f.read())
 
 
+@app.get("/trigger")
+async def serve_trigger():
+    with open("static/trigger.html") as f:
+        return HTMLResponse(content=f.read())
+
+
 @app.get("/api/coords")
 async def get_coords():
     max_x = int(os.getenv("GRID_WIDTH", "25"))
