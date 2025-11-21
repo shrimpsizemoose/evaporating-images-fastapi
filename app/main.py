@@ -1,5 +1,7 @@
+import asyncio
 import os
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -8,9 +10,39 @@ from app.figures import get_current_figure
 from app.storage import CoordinateStorage
 from app.websocket_manager import manager
 
-app = FastAPI()
-
 storage = CoordinateStorage()
+
+
+async def monitor_expiring_pixels():
+    previous_keys = storage.get_all_keys()
+
+    while True:
+        await asyncio.sleep(0.5)
+        current_keys = storage.get_all_keys()
+        expired_keys = previous_keys - current_keys
+
+        if expired_keys:
+            expired_coords = []
+            for key in expired_keys:
+                parts = key.split(":")
+                if len(parts) == 3:
+                    y, x = int(parts[1]), int(parts[2])
+                    expired_coords.append({"x": x, "y": y})
+
+            if expired_coords:
+                await manager.broadcast({"type": "pixels_removed", "coords": expired_coords})
+
+        previous_keys = current_keys
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    task = asyncio.create_task(monitor_expiring_pixels())
+    yield
+    task.cancel()
+
+
+app = FastAPI(lifespan=lifespan)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 

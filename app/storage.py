@@ -80,3 +80,6 @@ class CoordinateStorage:
             "total_pixels": len(coords_with_ttl),
             "pixels": sorted(coords_with_ttl, key=lambda p: p["ttl"] if p["ttl"] else 999999),
         }
+
+    def get_all_keys(self) -> set[str]:
+        return {key.decode("utf-8") for key in self.redis.scan_iter("coords:*")}

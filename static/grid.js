@@ -48,6 +48,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 gridState.set(key, coord);
             });
             drawGrid();
+        } else if (data.type === 'pixels_removed') {
+            data.coords.forEach(coord => {
+                const key = `${coord.x},${coord.y}`;
+                gridState.delete(key);
+            });
+            drawGrid();
         } else if (data.type === 'clear') {
             gridState.clear();
             drawGrid();
