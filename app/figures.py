@@ -35,7 +35,19 @@ def load_figure(figures_dir: str, figure_name: str) -> Figure:
     return Figure.from_json(filepath)
 
 
-def get_current_figure() -> Figure:
+def get_current_figure(override_name: str | None = None) -> Figure:
     figures_dir = os.getenv("FIGURES_DIR", "figures")
-    current_figure = os.getenv("CURRENT_FIGURE", "moose")
+    current_figure = override_name or os.getenv("CURRENT_FIGURE", "moose")
     return load_figure(figures_dir, current_figure)
+
+
+def list_available_figures() -> list[dict]:
+    figures_dir = Path(os.getenv("FIGURES_DIR", "figures"))
+    figures = []
+    for filepath in figures_dir.glob("*.json"):
+        try:
+            figure = Figure.from_json(filepath)
+            figures.append({"name": figure.name, "filename": filepath.stem})
+        except Exception:
+            continue
+    return figures

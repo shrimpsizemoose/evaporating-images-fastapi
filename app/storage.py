@@ -101,3 +101,10 @@ class CoordinateStorage:
 
     def get_all_keys(self) -> set[str]:
         return {key.decode("utf-8") for key in self.redis.scan_iter("coords:*")}
+
+    def set_current_figure(self, figure_name: str) -> None:
+        self.redis.set("settings:current_figure", figure_name)
+
+    def get_current_figure_name(self) -> str | None:
+        value = self.redis.get("settings:current_figure")
+        return value.decode("utf-8") if value else None

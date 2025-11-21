@@ -50,13 +50,48 @@ body {
     color: white;
     border: none;
     border-radius: 8px;
-    padding: 24px;
-    font-size: 20px;
+    padding: 16px;
+    font-size: 18px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
     box-shadow: 0 4px 6px rgba(0,0,0,0.2);
     touch-action: manipulation;
+}
+
+.figure-button {
+    background: #2a2a2a;
+    border: 3px solid #3a3a3a;
+    border-radius: 8px;
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.figure-button.active {
+    border-color: #4CAF50;
+    background: #1b5e20;
+}
+
+.figure-button:active {
+    transform: scale(0.95);
+}
+
+.figure-thumbnail {
+    width: 80px;
+    height: 80px;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+.figure-name {
+    font-size: 12px;
+    color: #aaa;
+    text-transform: capitalize;
 }
 
 .button:active {
@@ -108,15 +143,26 @@ body {
     <h1>Evaporating Images Admin</h1>
 </div>
 <div class="container">
-    <button class="button trigger" onclick="trigger()">
-        ✨ Trigger
-    </button>
-    <button class="button full" onclick="full()">
-        🖼️ Show Full
-    </button>
+    <div style="background: #2a2a2a; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+        <h2 style="margin: 0 0 12px 0; font-size: 16px; font-weight: 500;">🎨 Select Figure</h2>
+        <div id="figure-selector" style="display: flex; gap: 12px; flex-wrap: wrap;">
+            Loading...
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+        <button class="button trigger" onclick="trigger()">
+            ✨ Trigger
+        </button>
+        <button class="button full" onclick="full()">
+            🖼️ Show Full
+        </button>
+    </div>
+
     <button class="button clear" onclick="clearGrid()">
         🗑️ Clear
     </button>
+
     <div id="status" class="status">Ready</div>
 
     <div style="background: #2a2a2a; padding: 20px; border-radius: 8px; margin-top: 20px;">
@@ -206,6 +252,100 @@ async function updateDebugInfo() {
     }
 }
 
+async function loadFigures() {
+    try {
+        const response = await fetch('/api/figures');
+        const data = await response.json();
+        const selectorEl = document.getElementById('figure-selector');
+
+        if (data.figures.length === 0) {
+            selectorEl.innerHTML = '<div style="color: #666;">No figures available</div>';
+            return;
+        }
+
+        selectorEl.innerHTML = '';
+        data.figures.forEach(fig => {
+            const btn = document.createElement('div');
+            btn.className = 'figure-button';
+            if (data.current === fig.filename) {
+                btn.classList.add('active');
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.className = 'figure-thumbnail';
+            canvas.width = 80;
+            canvas.height = 80;
+
+            const nameEl = document.createElement('div');
+            nameEl.className = 'figure-name';
+            nameEl.textContent = fig.name;
+
+            btn.appendChild(canvas);
+            btn.appendChild(nameEl);
+            btn.onclick = () => selectFigure(fig.filename);
+
+            selectorEl.appendChild(btn);
+
+            renderFigureThumbnail(canvas, fig.filename);
+        });
+    } catch (err) {
+        document.getElementById('figure-selector').textContent = 'Error loading figures: ' + err.message;
+    }
+}
+
+async function renderFigureThumbnail(canvas, filename) {
+    try {
+        const response = await fetch(`/figures/${filename}.json`);
+        const figureData = await response.json();
+
+        const ctx = canvas.getContext('2d');
+        const points = figureData.points;
+        const colors = figureData.colors;
+
+        const rows = points.length;
+        const cols = points[0].length;
+        const cellWidth = canvas.width / cols;
+        const cellHeight = canvas.height / rows;
+
+        ctx.fillStyle = '#1a1a1a';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        for (let y = 0; y < rows; y++) {
+            for (let x = 0; x < cols; x++) {
+                const colorKey = points[y][x];
+                const color = colors[colorKey];
+                if (color) {
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x * cellWidth, y * cellHeight, cellWidth, cellHeight);
+                }
+            }
+        }
+    } catch (err) {
+        console.error('Error rendering thumbnail:', err);
+    }
+}
+
+async function selectFigure(filename) {
+    try {
+        const response = await fetch('/api/set-figure', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({figure: filename})
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+            showStatus(`Figure changed to ${filename}`, 'success');
+            loadFigures();
+        } else {
+            showStatus('Error: ' + (data.error || 'Unknown error'), 'error');
+        }
+    } catch (err) {
+        showStatus('Error: ' + err.message, 'error');
+    }
+}
+
+loadFigures();
 updateDebugInfo();
 setInterval(updateDebugInfo, 1000);
 </script>

@@ -6,7 +6,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.figures import get_current_figure
+from app.figures import get_current_figure, list_available_figures
 from app.storage import CoordinateStorage
 from app.websocket_manager import manager
 
@@ -45,6 +45,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/figures", StaticFiles(directory="figures"), name="figures")
 
 
 @app.get("/")
@@ -75,7 +76,8 @@ async def get_coords():
 
 @app.post("/api/trigger")
 async def trigger():
-    figure = get_current_figure()
+    current_figure_name = storage.get_current_figure_name()
+    figure = get_current_figure(override_name=current_figure_name)
     shift_x = int(os.getenv("FIGURE_SHIFT_X", "7"))
     shift_y = int(os.getenv("FIGURE_SHIFT_Y", "5"))
     coords = figure.get_coords(shift_x=shift_x, shift_y=shift_y)
@@ -89,7 +91,8 @@ async def trigger():
 
 @app.post("/api/full")
 async def full():
-    figure = get_current_figure()
+    current_figure_name = storage.get_current_figure_name()
+    figure = get_current_figure(override_name=current_figure_name)
     shift_x = int(os.getenv("FIGURE_SHIFT_X", "7"))
     shift_y = int(os.getenv("FIGURE_SHIFT_Y", "5"))
     coords = figure.get_coords(shift_x=shift_x, shift_y=shift_y)
@@ -114,6 +117,27 @@ async def clear():
 async def debug():
     debug_info = storage.get_debug_info()
     return JSONResponse(content=debug_info)
+
+
+@app.get("/api/figures")
+async def get_figures():
+    figures = list_available_figures()
+    current = storage.get_current_figure_name()
+    return JSONResponse(content={"figures": figures, "current": current})
+
+
+@app.post("/api/set-figure")
+async def set_figure(request: dict):
+    figure_name = request.get("figure")
+    if not figure_name:
+        return JSONResponse(content={"error": "Missing figure name"}, status_code=400)
+
+    try:
+        get_current_figure(override_name=figure_name)
+        storage.set_current_figure(figure_name)
+        return JSONResponse(content={"message": f"Figure set to {figure_name}", "figure": figure_name})
+    except FileNotFoundError:
+        return JSONResponse(content={"error": "Figure not found"}, status_code=404)
 
 
 @app.websocket("/ws")
