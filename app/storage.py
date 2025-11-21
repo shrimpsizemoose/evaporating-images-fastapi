@@ -1,7 +1,10 @@
 import os
 import random
+import time
 
 import redis
+
+from app.models import Pixel
 
 
 class CoordinateStorage:
@@ -21,38 +24,48 @@ class CoordinateStorage:
 
         added = []
         for coord in pixels[:limit]:
-            x, y, color = coord["x"], coord["y"], coord["color"]
-            key = f"coords:{y}:{x}"
+            key = f"coords:{coord['y']}:{coord['x']}"
 
             if self.redis.exists(key):
                 continue
 
-            value = {"x": x, "y": y, "color": color, "draw": True}
+            pixel = Pixel(
+                x=coord["x"],
+                y=coord["y"],
+                color=coord["color"],
+                draw=True,
+                timestamp=int(time.time() * 1000),
+                ttl=random.randint(self.min_ttl, self.max_ttl),
+            )
 
-            self.redis.hset(key, mapping=value)
-            ttl = random.randint(self.min_ttl, self.max_ttl)
-            self.redis.expire(key, ttl)
+            self.redis.hset(key, mapping=pixel.to_redis())
+            self.redis.expire(key, pixel.ttl)
 
-            added.append(value)
+            added.append(pixel.model_dump())
 
         return added
 
     def add_all_pixels(self, coords: list[dict]) -> list[dict]:
         added = []
         for coord in coords:
-            x, y, color = coord["x"], coord["y"], coord["color"]
-            key = f"coords:{y}:{x}"
+            key = f"coords:{coord['y']}:{coord['x']}"
 
             if self.redis.exists(key):
                 continue
 
-            value = {"x": x, "y": y, "color": color, "draw": True}
+            pixel = Pixel(
+                x=coord["x"],
+                y=coord["y"],
+                color=coord["color"],
+                draw=True,
+                timestamp=int(time.time() * 1000),
+                ttl=random.randint(5, 15),
+            )
 
-            self.redis.hset(key, mapping=value)
-            ttl = random.randint(5, 15)
-            self.redis.expire(key, ttl)
+            self.redis.hset(key, mapping=pixel.to_redis())
+            self.redis.expire(key, pixel.ttl)
 
-            added.append(value)
+            added.append(pixel.model_dump())
 
         return added
 
@@ -60,18 +73,10 @@ class CoordinateStorage:
         coords = []
         for key in self.redis.scan_iter("coords:*"):
             data = self.redis.hgetall(key)
-            x = int(data[b"x"])
-            y = int(data[b"y"])
+            pixel = Pixel.from_redis(data)
 
-            if x < max_x and y < max_y:
-                coords.append(
-                    {
-                        "x": x,
-                        "y": y,
-                        "color": data[b"color"].decode("utf-8"),
-                        "draw": bool(int(data[b"draw"])),
-                    }
-                )
+            if pixel.x < max_x and pixel.y < max_y:
+                coords.append(pixel.model_dump())
 
         return coords
 
@@ -82,20 +87,16 @@ class CoordinateStorage:
         coords_with_ttl = []
         for key in self.redis.scan_iter("coords:*"):
             data = self.redis.hgetall(key)
-            ttl = self.redis.ttl(key)
-            coords_with_ttl.append(
-                {
-                    "x": int(data[b"x"]),
-                    "y": int(data[b"y"]),
-                    "color": data[b"color"].decode("utf-8"),
-                    "draw": bool(int(data[b"draw"])),
-                    "ttl": ttl if ttl > 0 else None,
-                }
-            )
+            pixel = Pixel.from_redis(data)
+            ttl_remaining = self.redis.ttl(key)
+
+            pixel_dict = pixel.model_dump()
+            pixel_dict["ttl_remaining"] = ttl_remaining if ttl_remaining > 0 else None
+            coords_with_ttl.append(pixel_dict)
 
         return {
             "total_pixels": len(coords_with_ttl),
-            "pixels": sorted(coords_with_ttl, key=lambda p: p["ttl"] if p["ttl"] else 999999),
+            "pixels": sorted(coords_with_ttl, key=lambda p: p["ttl_remaining"] if p["ttl_remaining"] else 999999),
         }
 
     def get_all_keys(self) -> set[str]:
