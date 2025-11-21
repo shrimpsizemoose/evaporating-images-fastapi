@@ -13,11 +13,11 @@ class CoordinateStorage:
         self.pixels_per_trigger = int(os.getenv("PIXELS_PER_TRIGGER", "70"))
         self.draw_probability = float(os.getenv("DRAW_PROBABILITY", "0.5"))
 
-    def add_pixels(self, coords: list[dict], evaporate: bool = False) -> list[dict]:
+    def add_pixels(self, coords: list[dict]) -> list[dict]:
         pixels = coords.copy()
         random.shuffle(pixels)
 
-        limit = len(pixels) if not evaporate else self.pixels_per_trigger
+        limit = self.pixels_per_trigger
 
         added = []
         for coord in pixels[:limit]:
@@ -27,15 +27,13 @@ class CoordinateStorage:
             if self.redis.exists(key):
                 continue
 
-            draw = not evaporate or random.random() < self.draw_probability
-            value = {"x": x, "y": y, "color": color, "draw": int(draw)}
+            value = {"x": x, "y": y, "color": color, "draw": True}
 
             self.redis.hset(key, mapping=value)
-            if evaporate:
-                ttl = random.randint(self.min_ttl, self.max_ttl)
-                self.redis.expire(key, ttl)
+            ttl = random.randint(self.min_ttl, self.max_ttl)
+            self.redis.expire(key, ttl)
 
-            added.append({**value, "draw": bool(draw)})
+            added.append(value)
 
         return added
 
