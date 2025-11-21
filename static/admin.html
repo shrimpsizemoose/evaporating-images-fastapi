@@ -114,7 +114,7 @@ body {
     <button class="button full" onclick="full()">
         🖼️ Show Full
     </button>
-    <button class="button clear" onclick="clear()">
+    <button class="button clear" onclick="clearGrid()">
         🗑️ Clear
     </button>
     <div id="status" class="status">Ready</div>
@@ -159,12 +159,13 @@ async function full() {
     }
 }
 
-async function clear() {
+async function clearGrid() {
     if (!confirm('Clear the entire grid?')) return;
     try {
         const response = await fetch('/api/clear', { method: 'POST' });
         const data = await response.json();
         showStatus('Grid cleared', 'success');
+        updateDebugInfo();
     } catch (err) {
         showStatus('Error: ' + err.message, 'error');
     }
@@ -184,8 +185,8 @@ async function updateDebugInfo() {
             html += '<tr style="border-bottom: 1px solid #3a3a3a;"><th style="text-align: left; padding: 4px;">Coord</th><th style="text-align: left; padding: 4px;">Color</th><th style="text-align: left; padding: 4px;">Draw</th><th style="text-align: left; padding: 4px;">TTL</th></tr>';
 
             data.pixels.forEach(p => {
-                const ttlDisplay = p.ttl === null ? 'permanent' : `${p.ttl}s`;
-                const ttlColor = p.ttl === null ? '#4CAF50' : (p.ttl < 5 ? '#f44336' : '#2196F3');
+                const ttlDisplay = p.ttl_remaining === null ? 'permanent' : `${p.ttl_remaining}s`;
+                const ttlColor = p.ttl_remaining === null ? '#4CAF50' : (p.ttl_remaining < 5 ? '#f44336' : '#2196F3');
                 html += `<tr style="border-bottom: 1px solid #3a3a3a;">
                     <td style="padding: 4px;">(${p.x},${p.y})</td>
                     <td style="padding: 4px;"><span style="display: inline-block; width: 12px; height: 12px; background: ${p.color}; border: 1px solid #555; margin-right: 4px;"></span>${p.color}</td>
