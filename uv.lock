@@ -55,7 +55,7 @@ wheels = [
 ]
 
 [[package]]
-name = "evaporating-images-polytope"
+name = "evaporating-images-fastapi"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
