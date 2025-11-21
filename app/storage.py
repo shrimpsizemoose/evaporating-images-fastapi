@@ -60,3 +60,23 @@ class CoordinateStorage:
 
     def clear(self):
         self.redis.flushdb()
+
+    def get_debug_info(self) -> dict:
+        coords_with_ttl = []
+        for key in self.redis.scan_iter("coords:*"):
+            data = self.redis.hgetall(key)
+            ttl = self.redis.ttl(key)
+            coords_with_ttl.append(
+                {
+                    "x": int(data[b"x"]),
+                    "y": int(data[b"y"]),
+                    "color": data[b"color"].decode("utf-8"),
+                    "draw": bool(int(data[b"draw"])),
+                    "ttl": ttl if ttl > 0 else None,
+                }
+            )
+
+        return {
+            "total_pixels": len(coords_with_ttl),
+            "pixels": sorted(coords_with_ttl, key=lambda p: p["ttl"] if p["ttl"] else 999999),
+        }

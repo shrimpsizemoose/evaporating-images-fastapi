@@ -118,6 +118,13 @@ body {
         🗑️ Clear
     </button>
     <div id="status" class="status">Ready</div>
+
+    <div style="background: #2a2a2a; padding: 20px; border-radius: 8px; margin-top: 20px;">
+        <h2 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 500;">🔍 Debug Info</h2>
+        <div id="debug-info" style="font-size: 13px; font-family: monospace; color: #aaa;">
+            Loading...
+        </div>
+    </div>
 </div>
 
 <script>
@@ -162,6 +169,44 @@ async function clear() {
         showStatus('Error: ' + err.message, 'error');
     }
 }
+
+async function updateDebugInfo() {
+    try {
+        const response = await fetch('/api/debug');
+        const data = await response.json();
+        const debugEl = document.getElementById('debug-info');
+
+        let html = `<div style="margin-bottom: 12px;"><strong>Total pixels:</strong> ${data.total_pixels}</div>`;
+
+        if (data.pixels.length > 0) {
+            html += '<div style="max-height: 300px; overflow-y: auto;">';
+            html += '<table style="width: 100%; border-collapse: collapse;">';
+            html += '<tr style="border-bottom: 1px solid #3a3a3a;"><th style="text-align: left; padding: 4px;">Coord</th><th style="text-align: left; padding: 4px;">Color</th><th style="text-align: left; padding: 4px;">Draw</th><th style="text-align: left; padding: 4px;">TTL</th></tr>';
+
+            data.pixels.forEach(p => {
+                const ttlDisplay = p.ttl === null ? 'permanent' : `${p.ttl}s`;
+                const ttlColor = p.ttl === null ? '#4CAF50' : (p.ttl < 5 ? '#f44336' : '#2196F3');
+                html += `<tr style="border-bottom: 1px solid #3a3a3a;">
+                    <td style="padding: 4px;">(${p.x},${p.y})</td>
+                    <td style="padding: 4px;"><span style="display: inline-block; width: 12px; height: 12px; background: ${p.color}; border: 1px solid #555; margin-right: 4px;"></span>${p.color}</td>
+                    <td style="padding: 4px;">${p.draw ? '✓' : '✗'}</td>
+                    <td style="padding: 4px; color: ${ttlColor}; font-weight: bold;">${ttlDisplay}</td>
+                </tr>`;
+            });
+
+            html += '</table></div>';
+        } else {
+            html += '<div style="color: #666; font-style: italic;">No pixels in grid</div>';
+        }
+
+        debugEl.innerHTML = html;
+    } catch (err) {
+        document.getElementById('debug-info').textContent = 'Error loading debug info: ' + err.message;
+    }
+}
+
+updateDebugInfo();
+setInterval(updateDebugInfo, 1000);
 </script>
 </body>
 </html>

@@ -72,6 +72,12 @@ async def clear():
     return JSONResponse(content={"message": "Grid cleared"})
 
 
+@app.get("/api/debug")
+async def debug():
+    debug_info = storage.get_debug_info()
+    return JSONResponse(content=debug_info)
+
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
