@@ -1,5 +1,9 @@
 {
   "name": "moose",
+  "grid_width": 25,
+  "grid_height": 25,
+  "shift_x": 5,
+  "shift_y": 3,
   "colors": {
     "P": "pink",
     "K": "black",

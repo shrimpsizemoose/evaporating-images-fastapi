@@ -68,9 +68,9 @@ async def serve_trigger():
 
 @app.get("/api/coords")
 async def get_coords():
-    max_x = int(os.getenv("GRID_WIDTH", "25"))
-    max_y = int(os.getenv("GRID_HEIGHT", "25"))
-    coords = storage.get_all_coords(max_x=max_x, max_y=max_y)
+    current_figure_name = storage.get_current_figure_name()
+    figure = get_current_figure(override_name=current_figure_name)
+    coords = storage.get_all_coords(max_x=figure.grid_width, max_y=figure.grid_height)
     return JSONResponse(content={"coords": coords})
 
 
@@ -78,9 +78,7 @@ async def get_coords():
 async def trigger():
     current_figure_name = storage.get_current_figure_name()
     figure = get_current_figure(override_name=current_figure_name)
-    shift_x = int(os.getenv("FIGURE_SHIFT_X", "7"))
-    shift_y = int(os.getenv("FIGURE_SHIFT_Y", "5"))
-    coords = figure.get_coords(shift_x=shift_x, shift_y=shift_y)
+    coords = figure.get_coords(shift_x=figure.shift_x, shift_y=figure.shift_y)
 
     added = storage.add_pixels(coords)
 
@@ -93,9 +91,7 @@ async def trigger():
 async def full():
     current_figure_name = storage.get_current_figure_name()
     figure = get_current_figure(override_name=current_figure_name)
-    shift_x = int(os.getenv("FIGURE_SHIFT_X", "7"))
-    shift_y = int(os.getenv("FIGURE_SHIFT_Y", "5"))
-    coords = figure.get_coords(shift_x=shift_x, shift_y=shift_y)
+    coords = figure.get_coords(shift_x=figure.shift_x, shift_y=figure.shift_y)
 
     added = storage.add_all_pixels(coords)
 
@@ -126,6 +122,19 @@ async def get_figures():
     return JSONResponse(content={"figures": figures, "current": current})
 
 
+@app.get("/api/figure-settings")
+async def get_figure_settings():
+    current_figure_name = storage.get_current_figure_name()
+    figure = get_current_figure(override_name=current_figure_name)
+    return JSONResponse(content={
+        "name": figure.name,
+        "grid_width": figure.grid_width,
+        "grid_height": figure.grid_height,
+        "shift_x": figure.shift_x,
+        "shift_y": figure.shift_y,
+    })
+
+
 @app.post("/api/set-figure")
 async def set_figure(request: dict):
     figure_name = request.get("figure")
@@ -133,8 +142,20 @@ async def set_figure(request: dict):
         return JSONResponse(content={"error": "Missing figure name"}, status_code=400)
 
     try:
-        get_current_figure(override_name=figure_name)
+        figure = get_current_figure(override_name=figure_name)
         storage.set_current_figure(figure_name)
+
+        await manager.broadcast({
+            "type": "figure_changed",
+            "figure": {
+                "name": figure.name,
+                "grid_width": figure.grid_width,
+                "grid_height": figure.grid_height,
+                "shift_x": figure.shift_x,
+                "shift_y": figure.shift_y,
+            }
+        })
+
         return JSONResponse(content={"message": f"Figure set to {figure_name}", "figure": figure_name})
     except FileNotFoundError:
         return JSONResponse(content={"error": "Figure not found"}, status_code=404)

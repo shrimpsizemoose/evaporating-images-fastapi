@@ -3,15 +3,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const ctx = canvas.getContext("2d");
     const p = 10;
     const cw = 20;
-    const bw = 500;
-    const bh = 500;
 
-    const cols = bw / cw;
-    const rows = bh / cw;
-
-    canvas.width = bw + 2*p;
-    canvas.height = bh + 2*p;
-
+    let gridWidth = 25;
+    let gridHeight = 25;
     let gridState = new Map();
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -20,6 +14,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws`;
     let ws;
+
+    function resizeCanvas(width, height) {
+        gridWidth = width;
+        gridHeight = height;
+        const bw = gridWidth * cw;
+        const bh = gridHeight * cw;
+        canvas.width = bw + 2*p;
+        canvas.height = bh + 2*p;
+        drawGrid();
+    }
 
     function connectWebSocket() {
         ws = new WebSocket(wsUrl);
@@ -66,11 +70,18 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!fadeMode) {
                 drawGrid();
             }
+        } else if (data.type === 'figure_changed') {
+            resizeCanvas(data.figure.grid_width, data.figure.grid_height);
+            gridState.clear();
         }
     }
 
     async function fetchInitialState() {
         try {
+            const settingsResponse = await fetch('/api/figure-settings');
+            const settings = await settingsResponse.json();
+            resizeCanvas(settings.grid_width, settings.grid_height);
+
             const response = await fetch('/api/coords');
             const data = await response.json();
             gridState.clear();

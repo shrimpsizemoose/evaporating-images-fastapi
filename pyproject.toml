@@ -10,3 +10,10 @@ dependencies = [
     "uvicorn>=0.38.0",
     "websockets>=15.0.1",
 ]
+
+[project.optional-dependencies]
+scripts = [
+    "pillow>=11.0.0",
+    "scikit-learn>=1.6.1",
+    "numpy>=2.2.1",
+]

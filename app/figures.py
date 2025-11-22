@@ -9,12 +9,24 @@ class Figure:
     name: str
     colors: dict[str, str | None]
     points: list[list[str]]
+    grid_width: int
+    grid_height: int
+    shift_x: int
+    shift_y: int
 
     @classmethod
     def from_json(cls, filepath: str | Path) -> "Figure":
         with open(filepath) as f:
             data = json.load(f)
-        return cls(name=data["name"], colors=data["colors"], points=data["points"])
+        return cls(
+            name=data["name"],
+            colors=data["colors"],
+            points=data["points"],
+            grid_width=data["grid_width"],
+            grid_height=data["grid_height"],
+            shift_x=data["shift_x"],
+            shift_y=data["shift_y"],
+        )
 
     def get_coords(self, shift_x: int = 0, shift_y: int = 0) -> list[dict]:
         coords = []
