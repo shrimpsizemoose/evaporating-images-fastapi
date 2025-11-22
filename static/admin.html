@@ -183,7 +183,7 @@ body {
             Loading...
         </div>
         <h3 style="margin: 16px 0 8px 0; font-size: 14px; font-weight: 500; color: #aaa;">Background</h3>
-        <div id="background-selector" style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <div id="background-selector" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
             <div class="bg-button active" data-color="auto" title="Auto (Figure Default)">
                 <div class="bg-swatch" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
                 <div class="bg-label">Auto</div>
@@ -208,6 +208,12 @@ body {
                 <div class="bg-swatch" style="background: #ffa500;"></div>
                 <div class="bg-label">Sunset</div>
             </div>
+        </div>
+        <h3 style="margin: 16px 0 8px 0; font-size: 14px; font-weight: 500; color: #aaa;">Canvas Left Padding</h3>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <input type="range" id="padding-slider" min="0" max="100" value="20"
+                   style="flex: 1; height: 6px; border-radius: 3px; background: #3a3a3a; outline: none; -webkit-appearance: none;">
+            <span id="padding-value" style="min-width: 45px; text-align: right; font-weight: 600; color: #4CAF50;">20px</span>
         </div>
     </div>
 
@@ -438,7 +444,49 @@ document.querySelectorAll('.bg-button').forEach(btn => {
     btn.onclick = () => selectBackground(btn.dataset.color);
 });
 
+const paddingSlider = document.getElementById('padding-slider');
+const paddingValue = document.getElementById('padding-value');
+
+paddingSlider.addEventListener('input', (e) => {
+    const value = e.target.value;
+    paddingValue.textContent = `${value}px`;
+});
+
+paddingSlider.addEventListener('change', async (e) => {
+    const padding = parseInt(e.target.value);
+    try {
+        const response = await fetch('/api/set-canvas-padding', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({padding: padding})
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+            showStatus(`Canvas padding set to ${padding}px`, 'success');
+        } else {
+            showStatus('Error: ' + (data.error || 'Unknown error'), 'error');
+        }
+    } catch (err) {
+        showStatus('Error: ' + err.message, 'error');
+    }
+});
+
+async function loadPaddingSetting() {
+    try {
+        const response = await fetch('/api/figure-settings');
+        const data = await response.json();
+        if (data.canvas_left_padding !== undefined) {
+            paddingSlider.value = data.canvas_left_padding;
+            paddingValue.textContent = `${data.canvas_left_padding}px`;
+        }
+    } catch (err) {
+        console.error('Error loading padding setting:', err);
+    }
+}
+
 loadFigures();
+loadPaddingSetting();
 updateDebugInfo();
 setInterval(updateDebugInfo, 1000);
 </script>

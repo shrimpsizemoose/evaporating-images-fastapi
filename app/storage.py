@@ -118,3 +118,10 @@ class CoordinateStorage:
 
     def clear_background_override(self) -> None:
         self.redis.delete("settings:background_override")
+
+    def set_canvas_left_padding(self, padding: int) -> None:
+        self.redis.set("settings:canvas_left_padding", padding)
+
+    def get_canvas_left_padding(self) -> int:
+        value = self.redis.get("settings:canvas_left_padding")
+        return int(value) if value else 20

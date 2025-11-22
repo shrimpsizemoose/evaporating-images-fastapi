@@ -80,6 +80,8 @@ document.addEventListener('DOMContentLoaded', function() {
             gridState.clear();
         } else if (data.type === 'background_changed') {
             setBackgroundColor(data.background_color);
+        } else if (data.type === 'padding_changed') {
+            document.body.style.paddingLeft = data.left + 'px';
         }
     }
 
@@ -89,6 +91,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const settings = await settingsResponse.json();
             resizeCanvas(settings.grid_width, settings.grid_height);
             setBackgroundColor(settings.background_color);
+
+            if (settings.canvas_left_padding !== undefined) {
+                document.body.style.paddingLeft = settings.canvas_left_padding + 'px';
+            }
 
             const response = await fetch('/api/coords');
             const data = await response.json();

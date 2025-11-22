@@ -129,6 +129,7 @@ async def get_figure_settings():
     figure = get_current_figure(override_name=current_figure_name)
     background_override = storage.get_background_override()
     background = background_override if background_override else figure.background_color
+    canvas_left_padding = storage.get_canvas_left_padding()
 
     return JSONResponse(content={
         "name": figure.name,
@@ -138,6 +139,7 @@ async def get_figure_settings():
         "shift_y": figure.shift_y,
         "background_color": background,
         "default_background": figure.background_color,
+        "canvas_left_padding": canvas_left_padding,
         "is_override": background_override is not None,
     })
 
@@ -193,6 +195,30 @@ async def set_background(request: dict):
     })
 
     return JSONResponse(content={"message": "Background updated", "color": actual_color})
+
+
+@app.post("/api/set-canvas-padding")
+async def set_canvas_padding(request: dict):
+    padding = request.get("padding")
+
+    if padding is None:
+        return JSONResponse(content={"error": "Missing padding value"}, status_code=400)
+
+    try:
+        padding_int = int(padding)
+        if padding_int < 0 or padding_int > 100:
+            return JSONResponse(content={"error": "Padding must be between 0 and 100"}, status_code=400)
+
+        storage.set_canvas_left_padding(padding_int)
+
+        await manager.broadcast({
+            "type": "padding_changed",
+            "left": padding_int
+        })
+
+        return JSONResponse(content={"message": "Canvas padding updated", "padding": padding_int})
+    except ValueError:
+        return JSONResponse(content={"error": "Invalid padding value"}, status_code=400)
 
 
 @app.websocket("/ws")
