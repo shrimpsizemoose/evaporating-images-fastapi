@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
-    const p = 10;
     const cw = 20;
 
     let gridWidth = 25;
@@ -19,10 +18,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function resizeCanvas(width, height) {
         gridWidth = width;
         gridHeight = height;
-        const bw = gridWidth * cw;
-        const bh = gridHeight * cw;
-        canvas.width = bw + 2*p;
-        canvas.height = bh + 2*p;
+        canvas.width = gridWidth * cw;
+        canvas.height = gridHeight * cw;
         drawGrid();
     }
 
@@ -126,8 +123,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 ctx.globalAlpha = opacity;
                 ctx.fillStyle = item.color;
-                const x = item.x * cw + p;
-                const y = item.y * cw + p;
+                const x = item.x * cw;
+                const y = item.y * cw;
                 ctx.fillRect(x, y, cw, cw);
                 ctx.globalAlpha = 1.0;
             }
