@@ -23,6 +23,12 @@ document.addEventListener('DOMContentLoaded', function() {
         drawGrid();
     }
 
+    function setBackgroundColor(color) {
+        backgroundColor = color;
+        document.body.style.backgroundColor = color;
+        drawGrid();
+    }
+
     function connectWebSocket() {
         ws = new WebSocket(wsUrl);
 
@@ -70,11 +76,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } else if (data.type === 'figure_changed') {
             resizeCanvas(data.figure.grid_width, data.figure.grid_height);
-            backgroundColor = data.figure.background_color;
+            setBackgroundColor(data.figure.background_color);
             gridState.clear();
         } else if (data.type === 'background_changed') {
-            backgroundColor = data.background_color;
-            drawGrid();
+            setBackgroundColor(data.background_color);
         }
     }
 
@@ -83,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const settingsResponse = await fetch('/api/figure-settings');
             const settings = await settingsResponse.json();
             resizeCanvas(settings.grid_width, settings.grid_height);
-            backgroundColor = settings.background_color;
+            setBackgroundColor(settings.background_color);
 
             const response = await fetch('/api/coords');
             const data = await response.json();
