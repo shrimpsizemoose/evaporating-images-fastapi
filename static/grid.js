@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (data.type === 'background_changed') {
             setBackgroundColor(data.background_color);
         } else if (data.type === 'padding_changed') {
-            document.body.style.paddingLeft = data.left + 'px';
+            canvas.style.marginLeft = data.left + 'px';
         }
     }
 
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', function() {
             setBackgroundColor(settings.background_color);
 
             if (settings.canvas_left_padding !== undefined) {
-                document.body.style.paddingLeft = settings.canvas_left_padding + 'px';
+                canvas.style.marginLeft = settings.canvas_left_padding + 'px';
             }
 
             const response = await fetch('/api/coords');
