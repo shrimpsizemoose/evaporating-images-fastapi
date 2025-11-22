@@ -206,8 +206,8 @@ async def set_canvas_padding(request: dict):
 
     try:
         padding_int = int(padding)
-        if padding_int < 0 or padding_int > 100:
-            return JSONResponse(content={"error": "Padding must be between 0 and 100"}, status_code=400)
+        if padding_int < 0 or padding_int > 1600:
+            return JSONResponse(content={"error": "Padding must be between 0 and 1600"}, status_code=400)
 
         storage.set_canvas_left_padding(padding_int)
 
