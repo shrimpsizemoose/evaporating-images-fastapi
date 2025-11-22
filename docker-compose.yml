@@ -13,12 +13,6 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - FIGURES_DIR=figures
       - CURRENT_FIGURE=moose
-      - FIGURE_SHIFT_X=7
-      - FIGURE_SHIFT_Y=5
-      - GRID_WIDTH=25
-      - GRID_HEIGHT=25
-      - PIXELS_PER_TRIGGER=70
-      - DRAW_PROBABILITY=0.5
       - MIN_TTL_SECONDS=3
       - MAX_TTL_SECONDS=10
     depends_on:
