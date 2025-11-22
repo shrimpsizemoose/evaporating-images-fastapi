@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let gridWidth = 25;
     let gridHeight = 25;
+    let backgroundColor = 'lightgreen';
     let gridState = new Map();
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -72,7 +73,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } else if (data.type === 'figure_changed') {
             resizeCanvas(data.figure.grid_width, data.figure.grid_height);
+            backgroundColor = data.figure.background_color;
             gridState.clear();
+        } else if (data.type === 'background_changed') {
+            backgroundColor = data.background_color;
+            drawGrid();
         }
     }
 
@@ -81,6 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const settingsResponse = await fetch('/api/figure-settings');
             const settings = await settingsResponse.json();
             resizeCanvas(settings.grid_width, settings.grid_height);
+            backgroundColor = settings.background_color;
 
             const response = await fetch('/api/coords');
             const data = await response.json();
@@ -96,7 +102,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function drawGrid() {
-        ctx.fillStyle = "lightgreen";
+        ctx.fillStyle = backgroundColor;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         const now = Date.now();

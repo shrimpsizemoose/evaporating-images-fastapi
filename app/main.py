@@ -126,12 +126,18 @@ async def get_figures():
 async def get_figure_settings():
     current_figure_name = storage.get_current_figure_name()
     figure = get_current_figure(override_name=current_figure_name)
+    background_override = storage.get_background_override()
+    background = background_override if background_override else figure.background_color
+
     return JSONResponse(content={
         "name": figure.name,
         "grid_width": figure.grid_width,
         "grid_height": figure.grid_height,
         "shift_x": figure.shift_x,
         "shift_y": figure.shift_y,
+        "background_color": background,
+        "default_background": figure.background_color,
+        "is_override": background_override is not None,
     })
 
 
@@ -145,6 +151,9 @@ async def set_figure(request: dict):
         figure = get_current_figure(override_name=figure_name)
         storage.set_current_figure(figure_name)
 
+        background_override = storage.get_background_override()
+        background = background_override if background_override else figure.background_color
+
         await manager.broadcast({
             "type": "figure_changed",
             "figure": {
@@ -153,12 +162,36 @@ async def set_figure(request: dict):
                 "grid_height": figure.grid_height,
                 "shift_x": figure.shift_x,
                 "shift_y": figure.shift_y,
+                "background_color": background,
             }
         })
 
         return JSONResponse(content={"message": f"Figure set to {figure_name}", "figure": figure_name})
     except FileNotFoundError:
         return JSONResponse(content={"error": "Figure not found"}, status_code=404)
+
+
+@app.post("/api/set-background")
+async def set_background(request: dict):
+    color = request.get("color")
+
+    if color == "auto":
+        storage.clear_background_override()
+        current_figure_name = storage.get_current_figure_name()
+        figure = get_current_figure(override_name=current_figure_name)
+        actual_color = figure.background_color
+    else:
+        if not color:
+            return JSONResponse(content={"error": "Missing color"}, status_code=400)
+        storage.set_background_override(color)
+        actual_color = color
+
+    await manager.broadcast({
+        "type": "background_changed",
+        "background_color": actual_color
+    })
+
+    return JSONResponse(content={"message": "Background updated", "color": actual_color})
 
 
 @app.websocket("/ws")

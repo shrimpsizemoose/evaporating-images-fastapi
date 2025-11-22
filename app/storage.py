@@ -108,3 +108,13 @@ class CoordinateStorage:
     def get_current_figure_name(self) -> str | None:
         value = self.redis.get("settings:current_figure")
         return value.decode("utf-8") if value else None
+
+    def set_background_override(self, color: str) -> None:
+        self.redis.set("settings:background_override", color)
+
+    def get_background_override(self) -> str | None:
+        value = self.redis.get("settings:background_override")
+        return value.decode("utf-8") if value else None
+
+    def clear_background_override(self) -> None:
+        self.redis.delete("settings:background_override")

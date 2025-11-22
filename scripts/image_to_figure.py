@@ -108,7 +108,7 @@ def map_to_palette(pixels, palette, transparent_color=None):
     return mapped
 
 
-def create_figure_json(image_path, output_path, grid_size=25, num_colors=8, name=None, display_grid_size=None, shift_x=None, shift_y=None):
+def create_figure_json(image_path, output_path, grid_size=25, num_colors=8, name=None, display_grid_size=None, shift_x=None, shift_y=None, background_color=None):
     """Convert image to figure JSON file.
 
     Args:
@@ -143,6 +143,9 @@ def create_figure_json(image_path, output_path, grid_size=25, num_colors=8, name
     if shift_y is None:
         shift_y = (display_grid_size - grid_size) // 2
 
+    if background_color is None:
+        background_color = palette[0] if palette else "#ffffff"
+
     # Create color mapping with letter keys
     letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     colors = {"_": None}
@@ -166,6 +169,7 @@ def create_figure_json(image_path, output_path, grid_size=25, num_colors=8, name
         "grid_height": display_grid_size,
         "shift_x": shift_x,
         "shift_y": shift_y,
+        "background_color": background_color,
         "colors": colors,
         "points": points
     }

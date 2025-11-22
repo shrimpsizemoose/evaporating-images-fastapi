@@ -13,6 +13,7 @@ class Figure:
     grid_height: int
     shift_x: int
     shift_y: int
+    background_color: str
 
     @classmethod
     def from_json(cls, filepath: str | Path) -> "Figure":
@@ -26,6 +27,7 @@ class Figure:
             grid_height=data["grid_height"],
             shift_x=data["shift_x"],
             shift_y=data["shift_y"],
+            background_color=data["background_color"],
         )
 
     def get_coords(self, shift_x: int = 0, shift_y: int = 0) -> list[dict]:

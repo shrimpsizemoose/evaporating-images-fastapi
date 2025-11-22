@@ -4,6 +4,7 @@
   "grid_height": 30,
   "shift_x": 2,
   "shift_y": 2,
+  "background_color": "#085878",
   "colors": {
     "_": null,
     "A": "#ecd49c",

@@ -94,6 +94,40 @@ body {
     text-transform: capitalize;
 }
 
+.bg-button {
+    background: #2a2a2a;
+    border: 2px solid #3a3a3a;
+    border-radius: 6px;
+    padding: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.bg-button.active {
+    border-color: #4CAF50;
+    background: #1b5e20;
+}
+
+.bg-button:active {
+    transform: scale(0.95);
+}
+
+.bg-swatch {
+    width: 50px;
+    height: 50px;
+    border-radius: 4px;
+    border: 1px solid #555;
+}
+
+.bg-label {
+    font-size: 11px;
+    color: #aaa;
+}
+
 .button:active {
     transform: scale(0.95);
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -145,8 +179,35 @@ body {
 <div class="container">
     <div style="background: #2a2a2a; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
         <h2 style="margin: 0 0 12px 0; font-size: 16px; font-weight: 500;">🎨 Select Figure</h2>
-        <div id="figure-selector" style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <div id="figure-selector" style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;">
             Loading...
+        </div>
+        <h3 style="margin: 16px 0 8px 0; font-size: 14px; font-weight: 500; color: #aaa;">Background</h3>
+        <div id="background-selector" style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <div class="bg-button active" data-color="auto" title="Auto (Figure Default)">
+                <div class="bg-swatch" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                <div class="bg-label">Auto</div>
+            </div>
+            <div class="bg-button" data-color="#085878" title="Ocean Blue">
+                <div class="bg-swatch" style="background: #085878;"></div>
+                <div class="bg-label">Ocean</div>
+            </div>
+            <div class="bg-button" data-color="#90EE90" title="Forest Green">
+                <div class="bg-swatch" style="background: #90EE90;"></div>
+                <div class="bg-label">Forest</div>
+            </div>
+            <div class="bg-button" data-color="#1a1a1a" title="Night Black">
+                <div class="bg-swatch" style="background: #1a1a1a;"></div>
+                <div class="bg-label">Night</div>
+            </div>
+            <div class="bg-button" data-color="#f0f0f0" title="Pure White">
+                <div class="bg-swatch" style="background: #f0f0f0;"></div>
+                <div class="bg-label">Pure</div>
+            </div>
+            <div class="bg-button" data-color="#ffa500" title="Sunset Orange">
+                <div class="bg-swatch" style="background: #ffa500;"></div>
+                <div class="bg-label">Sunset</div>
+            </div>
         </div>
     </div>
 
@@ -344,6 +405,38 @@ async function selectFigure(filename) {
         showStatus('Error: ' + err.message, 'error');
     }
 }
+
+async function selectBackground(color) {
+    try {
+        const response = await fetch('/api/set-background', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({color: color})
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+            showStatus(`Background changed`, 'success');
+
+            document.querySelectorAll('.bg-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            const activeBtn = document.querySelector(`.bg-button[data-color="${color}"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+            }
+        } else {
+            showStatus('Error: ' + (data.error || 'Unknown error'), 'error');
+        }
+    } catch (err) {
+        showStatus('Error: ' + err.message, 'error');
+    }
+}
+
+document.querySelectorAll('.bg-button').forEach(btn => {
+    btn.onclick = () => selectBackground(btn.dataset.color);
+});
 
 loadFigures();
 updateDebugInfo();
