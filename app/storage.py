@@ -16,11 +16,11 @@ class CoordinateStorage:
         self.pixels_per_trigger = int(os.getenv("PIXELS_PER_TRIGGER", "70"))
         self.draw_probability = float(os.getenv("DRAW_PROBABILITY", "0.5"))
 
-    def add_pixels(self, coords: list[dict]) -> list[dict]:
+    def add_pixels(self, coords: list[dict], pixels_per_trigger: int | None = None) -> list[dict]:
         pixels = coords.copy()
         random.shuffle(pixels)
 
-        limit = self.pixels_per_trigger
+        limit = pixels_per_trigger if pixels_per_trigger is not None else self.pixels_per_trigger
 
         added = []
         for coord in pixels[:limit]:

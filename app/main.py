@@ -79,8 +79,9 @@ async def trigger():
     current_figure_name = storage.get_current_figure_name()
     figure = get_current_figure(override_name=current_figure_name)
     coords = figure.get_coords(shift_x=figure.shift_x, shift_y=figure.shift_y)
+    pixels_per_trigger = figure.get_pixels_per_trigger()
 
-    added = storage.add_pixels(coords)
+    added = storage.add_pixels(coords, pixels_per_trigger=pixels_per_trigger)
 
     await manager.broadcast({"type": "pixels_added", "coords": added})
 

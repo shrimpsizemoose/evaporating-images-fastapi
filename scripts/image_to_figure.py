@@ -141,6 +141,7 @@ def create_figure_json(
         "shift_x": shift_x,
         "shift_y": shift_y,
         "background_color": background_color,
+        "pixels_per_trigger_percent": 42.5,
         "colors": colors,
         "points": points,
     }

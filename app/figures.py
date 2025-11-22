@@ -14,6 +14,7 @@ class Figure:
     shift_x: int
     shift_y: int
     background_color: str
+    pixels_per_trigger_percent: float = 42.5
 
     @classmethod
     def from_json(cls, filepath: str | Path) -> "Figure":
@@ -28,7 +29,20 @@ class Figure:
             shift_x=data["shift_x"],
             shift_y=data["shift_y"],
             background_color=data["background_color"],
+            pixels_per_trigger_percent=data.get("pixels_per_trigger_percent", 42.5),
         )
+
+    def get_pixel_count(self) -> int:
+        count = 0
+        for row in self.points:
+            for cell in row:
+                if cell != "_":
+                    count += 1
+        return count
+
+    def get_pixels_per_trigger(self) -> int:
+        pixel_count = self.get_pixel_count()
+        return int(pixel_count * (self.pixels_per_trigger_percent / 100))
 
     def get_coords(self, shift_x: int = 0, shift_y: int = 0) -> list[dict]:
         coords = []

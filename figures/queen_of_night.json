@@ -5,6 +5,7 @@
   "shift_x": 2,
   "shift_y": 2,
   "background_color": "#085878",
+  "pixels_per_trigger_percent": 42.5,
   "colors": {
     "_": null,
     "A": "#ecd49c",

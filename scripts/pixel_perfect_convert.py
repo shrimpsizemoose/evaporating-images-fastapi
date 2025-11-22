@@ -112,6 +112,7 @@ def pixel_perfect_convert(
         "shift_x": padding,
         "shift_y": padding,
         "background_color": background_color,
+        "pixels_per_trigger_percent": 42.5,
         "colors": colors,
         "points": letter_points,
     }
